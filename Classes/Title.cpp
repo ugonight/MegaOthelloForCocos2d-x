@@ -245,6 +245,9 @@ void Title::onTouchEnd(Touch *touch, Event *event) {
 }
 
 void Title::TouchAction() {	
+	auto visibleSize = Director::getInstance()->getVisibleSize();
+	Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
 	auto button1 = (Label*)this->getChildByName("ButtonLabel1");
 	auto button2 = (Label*)this->getChildByName("ButtonLabel2");
 
@@ -266,7 +269,102 @@ void Title::TouchAction() {
 		SimpleAudioEngine::getInstance()->playEffect(pochi, false);	
 		//scene = OPTION;
 
-		Director::getInstance()->replaceScene(TransitionCrossFade::create(0.5f, Option::createScene()));
+		if (mStep == 1) {	//オプション
+			Director::getInstance()->replaceScene(Option::createScene());
+		}
+		else {	//戦歴
+			auto layer = Layer::create();
+			this->addChild(layer, 5, "layer_h");
+			
+			//背景
+			Rect rect = Rect(0, 0, visibleSize.width, visibleSize.height);
+			Sprite* square = Sprite::create();
+			square->setTextureRect(rect);
+			square->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+			square->setColor(Color3B(255, 255, 100));
+			layer->addChild(square, 0, "back_h");
+			auto listener = EventListenerTouchOneByOne::create();
+			listener->setSwallowTouches(true);
+			listener->onTouchBegan = [this](Touch* touch, Event* event) {
+				return true;
+			};
+			listener->onTouchMoved = [this](Touch* touch, Event* event) {};
+			listener->onTouchEnded = [this](Touch* touch, Event* event) {
+				this->removeChildByName("layer_h");
+				SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+			};
+			this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
+
+			//タイトル
+			auto titleLabel = Label::createWithTTF("戦歴", FONT_NAME, 64);
+			titleLabel->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 32));
+			titleLabel->setTextColor(Color4B::BLACK);
+			layer->addChild(titleLabel, 1, "titleLabel");
+
+			//リバーシ
+			Label* label[4];
+			for (int i = 0; i < 4; i++) { 
+				label[i] = Label::createWithTTF("", FONT_NAME, 64); 
+				label[i]->setPosition(Vec2(origin.x + visibleSize.width / 6, origin.y + (visibleSize.height / 5) * (4 - i)));
+				label[i]->setColor(Color3B(0, 0, 0));
+				layer->addChild(label[i], 1);
+			}
+			label[0]->setString("普通のリバーシ");
+			label[1]->setString("へんなリバーシ");
+			label[2]->setString("メガリバーシ");
+			label[3]->setString("もろいリバーシ");
+
+			//やさしい・たいへん
+			Label* label1[8];
+			for (int i = 0; i < 4; i++) {
+				label1[2 * i] = Label::createWithTTF("やさしい", FONT_NAME, 64);
+				label1[2 * i]->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + (visibleSize.height / 5) * (4 - i) + 32));
+				label1[2 * i]->setColor(Color3B(0, 0, 0));
+				layer->addChild(label1[2 * i], 1);
+				label1[2 * i + 1] = Label::createWithTTF("たいへん", FONT_NAME, 64);
+				label1[2 * i + 1]->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + (visibleSize.height / 5) * (4 - i) - 32));
+				label1[2 * i + 1]->setColor(Color3B(0, 0, 0));
+				layer->addChild(label1[2 * i + 1], 1);
+			}
+
+			//結果
+			Label* label2[8];
+			auto _userDef = UserDefault::getInstance();	
+			std::stringstream str1, str2, str3;
+			for (int i = 0; i < 4; i++) {
+				str1 << "mode" << i + 1 << "easywin";
+				str2 << "mode" << i + 1 << "easylose";
+				str3 << _userDef->getIntegerForKey(str1.str().c_str()) << "勝" << _userDef->getIntegerForKey(str2.str().c_str()) << "敗";
+				label2[2 * i] = Label::createWithTTF(str3.str(), FONT_NAME, 64);
+				label2[2 * i]->setPosition(Vec2(origin.x + visibleSize.width * 3 / 4, origin.y + (visibleSize.height / 5) * (4 - i) + 32));
+				label2[2 * i]->setColor(Color3B(0, 0, 0));
+				layer->addChild(label2[2 * i], 1);
+				str1.str(""); str2.str(""); str3.str("");
+				str1.clear(); str2.clear(); str3.clear();
+				str1 << "mode" << i + 1 << "hardwin";
+				str2 << "mode" << i + 1 << "hardlose";
+				str3 << _userDef->getIntegerForKey(str1.str().c_str()) << "勝" << _userDef->getIntegerForKey(str2.str().c_str()) << "敗";
+				label2[2 * i + 1] = Label::createWithTTF(str3.str(), FONT_NAME, 64);
+				label2[2 * i + 1]->setPosition(Vec2(origin.x + visibleSize.width * 3 / 4, origin.y + (visibleSize.height / 5) * (4 - i) - 32));
+				label2[2 * i + 1]->setColor(Color3B(0, 0, 0));
+				layer->addChild(label2[2 * i + 1], 1);
+				str1.str(""); str2.str(""); str3.str("");
+				str1.clear(); str2.clear(); str3.clear();
+			}
+
+			//プレイ回数
+			auto label3 = Label::createWithTTF("プレイ回数", FONT_NAME, 64);
+			label3->setPosition(Vec2(origin.x + visibleSize.width / 4, origin.y + 32));
+			label3->setTextColor(Color4B::BLACK);
+			layer->addChild(label3, 1);
+			std::stringstream str;
+			str << _userDef->getIntegerForKey("playcount") << "回";
+			auto label4 = Label::createWithTTF(str.str(), FONT_NAME, 64);
+			label4->setPosition(Vec2(origin.x + visibleSize.width * 3 / 4, origin.y + 32));
+			label4->setTextColor(Color4B::BLACK);
+			layer->addChild(label4, 1);
+
+		}
 	}
 
 	switch (mStep)
@@ -418,12 +516,18 @@ void Title::TouchAction() {
 	//設定ボタンの表示・非表示
 	auto square4 = this->getChildByName("button4");
 	auto square4_ = this->getChildByName("button4_");
-	auto label4 = this->getChildByName("ButtonLabel4");
-	if (mStep == 1) {
+	auto label4 = (Label*)this->getChildByName("ButtonLabel4");
+	if (mStep == 1 || ( mStep == 2 && mCom == true )) {
 		square4->setVisible(true);
 		square4_->setVisible(true);
 		label4->setVisible(true);
 		this->getEventDispatcher()->resumeEventListenersForTarget(square4);
+		if (mStep == 1) {
+			label4->setString("設定");
+		}
+		else {
+			label4->setString("戦歴");
+		}
 	}
 	else {
 		square4->setVisible(false);

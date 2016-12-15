@@ -899,7 +899,7 @@ void BoardNormal::Com2Murora() {
 				}
 				//çÃì_
 				score[x][y] = mytecount - 2 * usertecount;
-				if (((x == 1 || x == boardsize -1) && (y == 0 || y == 9)) || ((x == 0 || x == 9) && (y == 1 || y == boardsize + 1))) {
+				if (((x == 1 || x == boardsize -1) && (y == 0 || y == 9)) || ((x == 0 || x == 9) && (y == 1 || y == boardsize - 1))) {
 					score[x][y] += 20;
 				}
 				else if (((x <= 2 || x >= boardsize -2) && (y <= 1 || y >= boardsize -1)) || ((x <= 1 || x >= boardsize -1) && (y <= 2 || y >= boardsize-2))) {

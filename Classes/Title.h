@@ -25,4 +25,5 @@ private:
 
 	void onTouchEnd(cocos2d::Touch *touch, cocos2d::Event *event);
 	void TouchAction();
+	
 };

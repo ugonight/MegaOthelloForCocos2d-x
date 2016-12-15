@@ -228,7 +228,7 @@ void Option::TouchAction() {
 		_userDef->setBoolForKey("guide",mGuide);
 		_userDef->flush();
 		//scene = TITLE;
-		Director::getInstance()->replaceScene(TransitionCrossFade::create(0.5f, Title::createScene()));
+		Director::getInstance()->replaceScene(Title::createScene());
 		break;
 	}
 

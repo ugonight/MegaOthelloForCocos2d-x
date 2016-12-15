@@ -568,6 +568,28 @@ void Game::GetResultMessage() {
 
 	auto state = (Label*)this->getChildByName("stateLabel");
 	state->setString(str);
+
+	auto _userDef = UserDefault::getInstance();
+	_userDef->setIntegerForKey("playcount", _userDef->getIntegerForKey("playcount") + 1);
+
+	if (mCom) {
+		std::stringstream key;
+		key << "mode" << mMode + 1;
+		if (mDifficult == 0) {
+			key << "easy";
+		}
+		else {
+			key << "hard";
+		}
+		if (mBoard->CountStone(mComturn) < mBoard->CountStone(mBoard->NotTurn(mComturn))) {
+			key << "win";
+		}
+		else {
+			key << "lose";
+		}
+		_userDef->setIntegerForKey(key.str().c_str(), _userDef->getIntegerForKey(key.str().c_str()) + 1);
+	}
+	_userDef->flush();
 }
 
 void Game::updateGameTouch() {
