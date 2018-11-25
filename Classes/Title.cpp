@@ -1,7 +1,7 @@
 ﻿#pragma execution_character_set("utf-8")
 
-#include "SimpleAudioEngine.h"
-using namespace CocosDenshion;
+#include "audio/include/AudioEngine.h"
+using namespace cocos2d::experimental;
 
 #include "Title.h"
 #include "Option.h"
@@ -163,7 +163,7 @@ bool Title::init() {
 	Sprite* square4 = Sprite::create();
 	Sprite* square4_ = Sprite::create();
 	square4->setTextureRect(rect2);
-	square4->setPosition((visibleSize.width / 2) + (100 * 3.5) + (64 * 2.5), visibleSize.height - 577);
+	square4->setPosition((visibleSize.width / 2) - (100 * 3.5) - (64 * 2.5), visibleSize.height - 577 + 100);
 	square4->setColor(Color3B(0, 250, 0));
 	square4_->setTextureRect(rect2_);
 	square4_->setPosition(square4->getPosition());
@@ -198,14 +198,14 @@ bool Title::init() {
 	Sprite* square5 = Sprite::create();
 	Sprite* square5_ = Sprite::create();
 	square5->setTextureRect(rect3);
-	square5->setPosition((visibleSize.width / 2) + (100 * 3.5) + (64 * 2) - 5, visibleSize.height - 450);
+	square5->setPosition((visibleSize.width / 2) + (100 * 3.5) + (64 * 2) - 5, visibleSize.height - ((280 + 420) / 2));
 	square5->setColor(Color3B(0, 250, 0));
 	square5_->setTextureRect(rect3_);
 	square5_->setPosition(square5->getPosition());
 	square5_->setColor(Color3B(0, 0, 0));
 	this->addChild(square5, 2, "button5");
 	this->addChild(square5_, 1, "button5_");
-	auto ButtonLabel5 = Label::createWithTTF("▼", FONT_NAME, 64);
+	auto ButtonLabel5 = Label::createWithTTF("▲", FONT_NAME, 64);
 	ButtonLabel5->setPosition(square5->getPosition());
 	ButtonLabel5->setColor(Color3B(0, 0, 0));
 	this->addChild(ButtonLabel5, 3, "ButtonLabel5");
@@ -230,6 +230,49 @@ bool Title::init() {
 	ButtonLabel5->setVisible(false);
 
 
+	//スクロールボタン2
+	Sprite* square6 = Sprite::create();
+	Sprite* square6_ = Sprite::create();
+	square6->setTextureRect(rect3);
+	square6->setPosition((visibleSize.width / 2) + (100 * 3.5) + (64 * 2) - 5, visibleSize.height - ((480 + 620) / 2));
+	square6->setColor(Color3B(0, 250, 0));
+	square6_->setTextureRect(rect3_);
+	square6_->setPosition(square6->getPosition());
+	square6_->setColor(Color3B(0, 0, 0));
+	this->addChild(square6, 2, "button6");
+	this->addChild(square6_, 1, "button6_");
+	auto ButtonLabel6 = Label::createWithTTF("▼", FONT_NAME, 64);
+	ButtonLabel6->setPosition(square6->getPosition());
+	ButtonLabel6->setColor(Color3B(0, 0, 0));
+	this->addChild(ButtonLabel6, 3, "ButtonLabel6");
+	auto listener6 = EventListenerTouchOneByOne::create();
+	listener6->onTouchBegan = [this](Touch* touch, Event* event) {
+		auto target = (Sprite*)event->getCurrentTarget();
+		Rect targetBox = target->getBoundingBox();
+		Point touchPoint = Vec2(touch->getLocation().x, touch->getLocation().y);
+		if (targetBox.containsPoint(touchPoint))
+		{
+			target->setColor(Color3B(255, 255, 0));
+			mPoint = 6;
+		}
+		return true;
+	};
+	listener6->onTouchMoved = [this](Touch* touch, Event* event) {};
+	listener6->onTouchEnded = CC_CALLBACK_2(Title::onTouchEnd, this);
+	this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener6, square6);
+	//最初は非表示
+	square6->setVisible(false);
+	square6_->setVisible(false);
+	ButtonLabel6->setVisible(false);
+
+
+	auto _userDef = UserDefault::getInstance();
+	if (!_userDef->getBoolForKey("first")) {
+		_userDef->setBoolForKey("first", true);
+		_userDef->setBoolForKey("guide", true);	//最初はガイドオンにしておく
+	}
+	_userDef->flush();
+
 	return true;
 }
 
@@ -253,7 +296,7 @@ void Title::TouchAction() {
 
 	if (mPoint == 3) {
 		if (mStep == 1) {
-			SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+			AudioEngine::play2d(cancel, false);
 			//Close the cocos2d-x game scene and quit the application
 			Director::getInstance()->end();
 			
@@ -266,7 +309,7 @@ void Title::TouchAction() {
 	}
 
 	if (mPoint == 4) {
-		SimpleAudioEngine::getInstance()->playEffect(pochi, false);	
+		AudioEngine::play2d(pochi, false);
 		//scene = OPTION;
 
 		if (mStep == 1) {	//オプション
@@ -291,7 +334,7 @@ void Title::TouchAction() {
 			listener->onTouchMoved = [this](Touch* touch, Event* event) {};
 			listener->onTouchEnded = [this](Touch* touch, Event* event) {
 				this->removeChildByName("layer_h");
-				SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+				AudioEngine::play2d(cancel, false);
 			};
 			this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
 
@@ -370,6 +413,7 @@ void Title::TouchAction() {
 	switch (mStep)
 	{
 	case 1:
+		//一人で？二人で?
 		if (mPoint == 1) {
 			mCom = true;
 		}
@@ -384,20 +428,27 @@ void Title::TouchAction() {
 		break;
 
 	case 2:
+		//どんなリバーシ？
 		if (mPoint == 1) {
 			if (mMenumega == false) {
 				mMode = 0;
 			}
-			else {
+			else if (mMenumega == 1) {
 				mMode = 2;
+			}
+			else if (mMenumega == 2) {
+				mMode = 4;
 			}
 		}
 		else if (mPoint == 2) {
 			if (mMenumega == false) {
 				mMode = 1;
 			}
-			else {
+			else if (mMenumega == 1) {
 				mMode = 3;
+			}
+			else if (mMenumega == 2) {
+				mMode = 5;
 			}
 
 		}
@@ -410,25 +461,18 @@ void Title::TouchAction() {
 			}
 		}
 
+
 		if (mPoint == 5) {
-			if (mMenumega == false) {
-				mMenumega = true;
-				//sprintf_s(button1, " メガリバーシ");
-				//sprintf_s(button2, "もろいリバーシ");
-				button1->setString("メガリバーシ");
-				button2->setString("もろいリバーシ");
-			}
-			else {
-				mMenumega = false;
-				//sprintf_s(button1, "普通のリバーシ");
-				//sprintf_s(button2, "へんなリバーシ");
-				button1->setString("普通のリバーシ");
-				button2->setString("へんなリバーシ");
-			}
+			mMenumega--;
 		}
+		if (mPoint == 6) {
+			mMenumega++;
+		}
+
 		break;
 
 	case 3:
+		//先攻？後攻？
 		if (mPoint == 1) {
 			mComturn = white;
 		}
@@ -446,6 +490,7 @@ void Title::TouchAction() {
 		break;
 
 	case 4:
+		//難易度
 		if (mPoint == 1) {
 			mDifficult = 0;
 			mStep = 9;
@@ -459,6 +504,7 @@ void Title::TouchAction() {
 		break;
 	}
 
+	//ボタンテキスト設定
 	switch (mStep)
 	{
 	case 1:
@@ -472,9 +518,13 @@ void Title::TouchAction() {
 			button1->setString( "普通のリバーシ");
 			button2->setString( "へんなリバーシ");
 		}
-		else {
-			button1->setString( "メガリバーシ");
-			button2->setString( "もろいリバーシ");
+		else if (mMenumega == 1) {
+			button1->setString("メガリバーシ");
+			button2->setString("もろいリバーシ");
+		}
+		else if (mMenumega == 2) {
+			button1->setString("カスタム 8×8");
+			button2->setString("カスタム16×16");
 		}
 		break;
 	case 3:
@@ -492,7 +542,7 @@ void Title::TouchAction() {
 		//button1->setString("ひとりでプレイ");
 		//button2->setString("ふたりでプレイ");
 
-		SimpleAudioEngine::getInstance()->playBackgroundMusic(thinking, true);
+		AudioEngine::play2d(thinking, true);
 		//scene = GAME;
 
 		auto game = Game::create();
@@ -507,10 +557,10 @@ void Title::TouchAction() {
 	}
 
 	if (mPoint == 1 || mPoint == 2 || mPoint == 5) {
-		SimpleAudioEngine::getInstance()->playEffect(pochi,false);
+		AudioEngine::play2d(pochi,false);
 	}
 	else if (mPoint == 3) {
-		SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+		AudioEngine::play2d(cancel, false);
 	}
 
 	//設定ボタンの表示・非表示
@@ -549,7 +599,7 @@ void Title::TouchAction() {
 	auto square5 = this->getChildByName("button5");
 	auto square5_ = this->getChildByName("button5_");
 	auto label5 = (Label*)this->getChildByName("ButtonLabel5");
-	if (mStep == 2) {
+	if (mMenumega != 0 && mStep == 2) {
 		square5->setVisible(true);
 		square5_->setVisible(true);
 		label5->setVisible(true);
@@ -561,10 +611,21 @@ void Title::TouchAction() {
 		label5->setVisible(false);
 		this->getEventDispatcher()->pauseEventListenersForTarget(square5);
 	}
-	if (!mMenumega) {
-		label5->setString("▼");
+
+	//スクロールボタン2
+	auto square6 = this->getChildByName("button6");
+	auto square6_ = this->getChildByName("button6_");
+	auto label6 = (Label*)this->getChildByName("ButtonLabel6");
+	if (mMenumega != 2 && mStep == 2) {
+		square6->setVisible(true);
+		square6_->setVisible(true);
+		label6->setVisible(true);
+		this->getEventDispatcher()->resumeEventListenersForTarget(square6);
 	}
 	else {
-		label5->setString("▲");
+		square6->setVisible(false);
+		square6_->setVisible(false);
+		label6->setVisible(false);
+		this->getEventDispatcher()->pauseEventListenersForTarget(square6);
 	}
 }

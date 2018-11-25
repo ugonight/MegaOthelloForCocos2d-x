@@ -1,5 +1,5 @@
-#include "SimpleAudioEngine.h"
-using namespace CocosDenshion;
+#include "audio/include/AudioEngine.h"
+using namespace cocos2d::experimental;
 
 #include "WakeUpSceneFactory.h"
 #include "Title.h"
@@ -8,11 +8,11 @@ USING_NS_CC;
 
 cocos2d::Scene* WakeUpSceneFactory::create() {
 
-	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("thinking.ogg");
-	SimpleAudioEngine::getInstance()->preloadEffect("pachin4.ogg");
-	SimpleAudioEngine::getInstance()->preloadEffect("pochi.ogg");
-	SimpleAudioEngine::getInstance()->preloadEffect("pochib.ogg");
-	SimpleAudioEngine::getInstance()->preloadEffect("fall.ogg");
+	AudioEngine::preload("thinking.ogg");
+	AudioEngine::preload("pachin4.ogg");
+	AudioEngine::preload("pochi.ogg");
+	AudioEngine::preload("pochib.ogg");
+	AudioEngine::preload("fall.ogg");
 
 	auto scene = Scene::create();
 

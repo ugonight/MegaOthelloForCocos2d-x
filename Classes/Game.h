@@ -45,6 +45,7 @@ private:
 	bool mFallFlag;
 	bool mMessageFlag;
 	int mTimer;
+	int mInputX, mInputY;
 
 	void initDraw();
 	void updateDraw();

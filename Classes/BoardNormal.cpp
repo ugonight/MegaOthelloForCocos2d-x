@@ -1,20 +1,18 @@
 #include "BoardNormal.h"
-//#include "DxLib.h"
-#include"define.h"
+// #include "DxLib.h"
+#include<cocos2d.h>
 
-USING_NS_CC;
-
-BoardNormal::BoardNormal()
-{
+BoardNormal::BoardNormal() {
 }
 
-BoardNormal::~BoardNormal()
-{
+BoardNormal::~BoardNormal() {
 }
 
 void BoardNormal::reset() {
 	turn = black;
 	boardsize = 7;
+	finishFlag = false;
+	mode = NORMAL;
 
 	for (int i = 0; i < boardsize+1; i++) {
 		for (int j = 0; j < boardsize+1; j++) {
@@ -32,6 +30,8 @@ void BoardNormal::reset() {
 void BoardNormal::resetMurora(){
 	turn = black;
 	boardsize = 9;
+	finishFlag = false;
+	mode = MURORA;
 
 	for (int i = 0; i < boardsize+1; i++) {
 		for (int j = 0; j < boardsize+1; j++) {
@@ -52,6 +52,8 @@ void BoardNormal::resetMurora(){
 void BoardNormal::resetMega() {
 	turn = black;
 	boardsize = 15;
+	finishFlag = false;
+	mode = MEGA;
 
 	for (int i = 0; i < boardsize + 1; i++) {
 		for (int j = 0; j < boardsize + 1; j++) {
@@ -69,6 +71,8 @@ void BoardNormal::resetMega() {
 void BoardNormal::resetMoroi() {
 	turn = black;
 	boardsize = 11;
+	finishFlag = false;
+	mode = MOROI;
 
 	for (int i = 0; i < boardsize + 1; i++) {
 		for (int j = 0; j < boardsize + 1; j++) {
@@ -83,9 +87,23 @@ void BoardNormal::resetMoroi() {
 	}
 }
 
-bool BoardNormal::TurnChange()
+void BoardNormal::resetCustom8() {
+	reset();
+
+	turn = gray;
+	mode = CUSTOM8;
+}
+
+void BoardNormal::resetCustom16() {
+	resetMega();
+
+	turn = gray;
+	mode = CUSTOM16;
+
+}
+
 //ターン交代。ついでに次に置く方がパスしなくても大丈夫かも返す。
-{
+bool BoardNormal::TurnChange() {
 	bool result = false;
 
 	if (turn == black) {
@@ -106,7 +124,6 @@ bool BoardNormal::TurnChange()
 
 
 	return result;
-
 }
 
 bool BoardNormal::CheckPass(BorW turn) {
@@ -124,14 +141,11 @@ bool BoardNormal::CheckPass(BorW turn) {
 }
 
 BorW BoardNormal::GetBoard(int x, int y) {
-	return board[x][y];
-
+	return editingBoard[x][y];
 }
 
 void BoardNormal::SetBoard(int x, int y, BorW bw) {
-
-	board[x][y] = bw;
-
+	editingBoard[x][y] = bw;
 }
 
 BorW BoardNormal::GetTurn() {
@@ -162,6 +176,29 @@ bool BoardNormal::put(int x, int y, bool checkOnly, BorW turn) {
 
 	if (turn == none) {
 		turn = GetTurn();
+	}
+
+	//カスタムモード
+	if (x != -1 && y != -1) {
+		if (turn == gray) {
+			if (!checkOnly) {
+				switch (GetBoard(x, y)) {
+				case none:
+					SetBoard(x, y, gray);
+					break;
+				case gray:
+					SetBoard(x, y, black);
+					break;
+				case black:
+					SetBoard(x, y, white);
+					break;
+				case white:
+					SetBoard(x, y, none);
+					break;
+				}
+				return true;
+			}
+		}
 	}
 
 	//置きたい場所が空白かどうか
@@ -358,9 +395,8 @@ bool BoardNormal::put(int x, int y, bool checkOnly, BorW turn) {
 
 }
 
+//checkput関数のチェック処理をするところをまとめたもの。mainからは呼び出さない
 int BoardNormal::check(BorW board, int c, int turn) {
-	//checkput関数のチェック処理をするところをまとめたもの。mainからは呼び出さない
-
 	//黒の番のとき
 	if (turn == black) {
 		switch (board) {
@@ -402,7 +438,7 @@ int BoardNormal::check(BorW board, int c, int turn) {
 	return 4;
 }
 
-int BoardNormal::Fall() {
+int BoardNormal::fall() {
 	int r;
 	int nonenum = 0;
 	for (int i=0; i <= boardsize; i++) {
@@ -413,7 +449,7 @@ int BoardNormal::Fall() {
 		}
 	}
 	if (nonenum == 0) { return 0; }
-	r = rand() % (nonenum - 1) + 1;
+	r = cocos2d::random(1, nonenum);
 
 	nonenum = 0;
 	for (int i=0; i <= boardsize; i++) {
@@ -430,7 +466,7 @@ int BoardNormal::Fall() {
 }
 
 void BoardNormal::finish() {
-	turn = gray;
+	finishFlag = true;
 }
 
 BorW BoardNormal::NotTurn(BorW turn) {
@@ -445,10 +481,18 @@ BorW BoardNormal::NotTurn(BorW turn) {
 	}
 }
 
+bool BoardNormal::isFinish() {
+	return finishFlag;
+}
+
+gameMode BoardNormal::getMode() {
+	return mode;
+}
+
 void BoardNormal::Com1() {
 	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
 	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { -1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = -1000;//スコア比較用変数
@@ -468,28 +512,28 @@ void BoardNormal::Com1() {
 		}
 	}
 
-	for (int y = 0; y<boardsize+1; y++) {
-		for (int x = 0; x<boardsize+1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
 			for (int j = 0; j<=boardsize; j++) {
 				for (int i = 0; i<=boardsize; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
-
-
-			if (put(x, y, true) == 1) {
+			if (put(x, y) == true) {
 
 				for (int j = 0; j<=boardsize; j++) {
 					for (int i = 0; i<=boardsize; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -498,10 +542,9 @@ void BoardNormal::Com1() {
 				//採点
 				score[x][y] = mytecount - 2 * usertecount;
 				if ((x == 0 || x == boardsize) && (y == 0 || y == boardsize)) {
-					score[x][y] += 20;
-				}
-				else if ((x <= 1 || x >= boardsize-1) && (y <= 1 || y >= boardsize-1)) {
-					score[x][y] -= 20;
+					score[x][y] += 10;
+				} else if ((x <= 1 || boardsize - 1 <= x) && (y <= 1 || boardsize - 1 <= y)) {
+					score[x][y] -= 10;
 				}
 			}
 			else {
@@ -515,7 +558,7 @@ void BoardNormal::Com1() {
 	for (int y = 0; y<=boardsize; y++) {
 		for (int x = 0; x<=boardsize; x++) {
 			//printf("%d %d %d \n",x,y,score[x][y]);//動作確認用
-			if (score[x][y]>memos) {
+			if (score[x][y] > memos) {
 				memox = x;
 				memoy = y;
 				memos = score[x][y];
@@ -523,14 +566,17 @@ void BoardNormal::Com1() {
 		}
 	}
 
-	put(memox, memoy);
+	editingBoard = board;
+	if (!put(memox, memoy)) {
+		cocos2d::log("COMERROR\n");
+	}
 
 }
 
 void BoardNormal::Com1Murora() {
 	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
 	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { -1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = -1000;//スコア比較用変数
@@ -550,28 +596,30 @@ void BoardNormal::Com1Murora() {
 		}
 	}
 
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+			for (int j = 0; j <= boardsize; j++) {
+				for (int i = 0; i <= boardsize; i++) {
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
 
 
-			if (put(x, y, true) == 1) {
+			if (put(x, y) == 1) {
 
 				for (int j = 0; j<boardsize + 1; j++) {
 					for (int i = 0; i<boardsize + 1; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -605,94 +653,13 @@ void BoardNormal::Com1Murora() {
 		}
 	}
 
-	put(memox, memoy);
-
-}
-
-void BoardNormal::Com1Mega() {
-	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
-	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
-	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
-	int score[16][16] = { -1000 };//マスごとの得点。これが一番高いところに置く。
-	int memox, memoy, memos = -1000;//スコア比較用変数
-
-	BorW userturn;
-
-	if (GetTurn() == black) {
-		userturn = white;
-	}
-	else if (GetTurn() == white) {
-		userturn = black;
-	}
-
-	for (int j = 0; j<boardsize+1; j++) {
-		for (int i = 0; i<boardsize+1; i++) {
-			score[i][j] = -1001;
-		}
-	}
-
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
-			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
-				}
-			}
-			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
-			mytecount = 0;
-			usertecount = 0;
-
-
-
-			if (put(x, y, true) == 1) {
-
-				for (int j = 0; j<boardsize + 1; j++) {
-					for (int i = 0; i<boardsize + 1; i++) {
-						if (put(i, j, true, GetTurn())) {
-							mytecount++;
-						}
-						if (put(i, j, true), userturn) {
-							usertecount++;
-						}
-
-					}
-				}
-				//採点
-				score[x][y] = mytecount - 2 * usertecount;
-				if ((x == 0 || x == 15) && (y == 0 || y == 15)) {
-					score[x][y] += 20;
-				}
-				else if ((x <= 1 || x >= 14) && (y <= 1 || y >= 14)) {
-					score[x][y] -= 20;
-				}
-			}
-			else {
-				score[x][y] = -1000;
-			}
-
-		}
-	}
-
-	//点数比較
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
-			//printf("%d %d %d \n",x,y,score[x][y]);//動作確認用
-			if (score[x][y]>memos) {
-				memox = x;
-				memoy = y;
-				memos = score[x][y];
-			}
-		}
-	}
-
+	editingBoard = board;
 	put(memox, memoy);
 
 }
 
 void BoardNormal::Com1moroi() {
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { -1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = -1000;//スコア比較用変数
@@ -712,28 +679,27 @@ void BoardNormal::Com1moroi() {
 		}
 	}
 
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
 			for (int j = 0; j <= boardsize; j++) {
 				for (int i = 0; i <= boardsize; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
-
-
-			if (put(x, y, true) == 1) {
-
+			if (put(x, y) == 1) {
 				for (int j = 0; j <= boardsize; j++) {
 					for (int i = 0; i <= boardsize; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -761,6 +727,8 @@ void BoardNormal::Com1moroi() {
 		}
 	}
 
+
+	editingBoard = board;
 	put(memox, memoy);
 
 }
@@ -768,7 +736,7 @@ void BoardNormal::Com1moroi() {
 void BoardNormal::Com2() {
 	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
 	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { 1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = 1000;//スコア比較用変数
@@ -788,28 +756,30 @@ void BoardNormal::Com2() {
 		}
 	}
 
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+			for (int j = 0; j <= boardsize; j++) {
+				for (int i = 0; i <= boardsize; i++) {
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
 
 
-			if (put(x, y, true) == 1) {
+			if (put(x, y) == 1) {
 
 				for (int j = 0; j<boardsize + 1; j++) {
 					for (int i = 0; i<boardsize + 1; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -818,10 +788,9 @@ void BoardNormal::Com2() {
 				//採点
 				score[x][y] = mytecount - 2 * usertecount;
 				if ((x == 0 || x == boardsize) && (y == 0 || y == boardsize)) {
-					score[x][y] += 20;
-				}
-				else if ((x <= 1 || x >= 6) && (y <= 1 || y >= 6)) {
-					score[x][y] -= 20;
+					score[x][y] += 10;
+				} else if ((x <= 1 || boardsize - 1 <= x) && (y <= 1 || boardsize - 1 <= y)) {
+					score[x][y] -= 10;
 				}
 			}
 			else {
@@ -843,6 +812,8 @@ void BoardNormal::Com2() {
 		}
 	}
 
+
+	editingBoard = board;
 	put(memox, memoy);
 
 }
@@ -850,7 +821,7 @@ void BoardNormal::Com2() {
 void BoardNormal::Com2Murora() {
 	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
 	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { 1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = 1000;//スコア比較用変数
@@ -870,28 +841,30 @@ void BoardNormal::Com2Murora() {
 		}
 	}
 
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+			for (int j = 0; j <= boardsize; j++) {
+				for (int i = 0; i <= boardsize; i++) {
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
 
 
-			if (put(x, y, true) == 1) {
+			if (put(x, y) == 1) {
 
 				for (int j = 0; j<boardsize + 1; j++) {
 					for (int i = 0; i<boardsize + 1; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -899,10 +872,10 @@ void BoardNormal::Com2Murora() {
 				}
 				//採点
 				score[x][y] = mytecount - 2 * usertecount;
-				if (((x == 1 || x == boardsize -1) && (y == 0 || y == 9)) || ((x == 0 || x == 9) && (y == 1 || y == boardsize - 1))) {
+				if (((x == 1 || x == boardsize+1) && (y == 0 || y == 9)) || ((x == 0 || x == 9) && (y == 1 || y == boardsize+1))) {
 					score[x][y] += 20;
 				}
-				else if (((x <= 2 || x >= boardsize -2) && (y <= 1 || y >= boardsize -1)) || ((x <= 1 || x >= boardsize -1) && (y <= 2 || y >= boardsize-2))) {
+				else if (((x <= 2 || x >= boardsize) && (y <= 1 || y >= boardsize+1)) || ((x <= 1 || x >= boardsize+1) && (y <= 2 || y >= boardsize))) {
 					score[x][y] -= 20;
 				}
 			}
@@ -924,95 +897,15 @@ void BoardNormal::Com2Murora() {
 			}
 		}
 	}
+	
 
-	put(memox, memoy);
-
-}
-
-void BoardNormal::Com2Mega() {
-	//COMの思考ルーチン。自分のおける場所がどれくらいあるか、相手のおける場所がどれくらいあるかを基準に考える。相手のおける場所をなくす傾向強め
-	//たぶん少なくともりんなよりは強い
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
-	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
-	int score[16][16] = { 1000 };//マスごとの得点。これが一番高いところに置く。
-	int memox, memoy, memos = 1000;//スコア比較用変数
-
-	BorW userturn;
-
-	if (GetTurn() == black) {
-		userturn = white;
-	}
-	else if (GetTurn() == white) {
-		userturn = black;
-	}
-
-	for (int j = 0; j<boardsize+1; j++) {
-		for (int i = 0; i<boardsize+1; i++) {
-			score[i][j] = -1001;
-		}
-	}
-
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
-			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
-				}
-			}
-			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
-			mytecount = 0;
-			usertecount = 0;
-
-
-
-			if (put(x, y, true) == 1) {
-
-				for (int j = 0; j<boardsize + 1; j++) {
-					for (int i = 0; i<boardsize + 1; i++) {
-						if (put(i, j, true, GetTurn())) {
-							mytecount++;
-						}
-						if (put(i, j, true), userturn) {
-							usertecount++;
-						}
-
-					}
-				}
-				//採点
-				score[x][y] = mytecount - 2 * usertecount;
-				if ((x == 0 || x == 15) && (y == 0 || y == 15)) {
-					score[x][y] += 20;
-				}
-				else if ((x <= 1 || x >= 14) && (y <= 1 || y >= 14)) {
-					score[x][y] -= 20;
-				}
-			}
-			else {
-				score[x][y] = 1000;
-			}
-
-		}
-	}
-
-	//点数比較
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
-			//printf("%d %d %d \n",x,y,score[x][y]);//動作確認用
-			if (score[x][y] < memos) {
-				memox = x;
-				memoy = y;
-				memos = score[x][y];
-			}
-		}
-	}
-
+	editingBoard = board;
 	put(memox, memoy);
 
 }
 
 void BoardNormal::Com2moroi() {
-	int boardcopy[16][16];//シミュレート用の盤面のコピー
+	BorW boardcopy[16][16];//シミュレート用の盤面のコピー
 	int mytecount, usertecount;//置ける場所がどれくらいあるか覚えとく
 	int score[16][16] = { 1000 };//マスごとの得点。これが一番高いところに置く。
 	int memox, memoy, memos = 1000;//スコア比較用変数
@@ -1032,28 +925,30 @@ void BoardNormal::Com2moroi() {
 		}
 	}
 
-	for (int y = 0; y<boardsize + 1; y++) {
-		for (int x = 0; x<boardsize + 1; x++) {
+	for (int y = 0; y < boardsize + 1; y++) {
+		for (int x = 0; x < boardsize + 1; x++) {
 			//いじくってもいいように盤面をコピーする
-			for (int j = 0; j<boardsize + 1; j++) {
-				for (int i = 0; i<boardsize + 1; i++) {
-					boardcopy[i][j] = GetBoard(i, j);
+			for (int j = 0; j <= boardsize; j++) {
+				for (int i = 0; i <= boardsize; i++) {
+					boardcopy[i][j] = board[i][j];
 				}
 			}
+			editingBoard = boardcopy;
+
 			//コピーした盤面に試しに置いてみて自分と相手のおける場所を数える
 			mytecount = 0;
 			usertecount = 0;
 
 
 
-			if (put(x, y, true) == 1) {
+			if (put(x, y) == 1) {
 
 				for (int j = 0; j<boardsize + 1; j++) {
 					for (int i = 0; i<boardsize + 1; i++) {
 						if (put(i, j, true, GetTurn())) {
 							mytecount++;
 						}
-						if (put(i, j, true), userturn) {
+						if (put(i, j, true, userturn)) {
 							usertecount++;
 						}
 
@@ -1081,6 +976,8 @@ void BoardNormal::Com2moroi() {
 		}
 	}
 
+
+	editingBoard = board;
 	put(memox, memoy);
 
 }

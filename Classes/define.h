@@ -4,15 +4,19 @@
 
 #define FONT_NAME "fonts/mgenplus-1cp-medium.ttf"
 
-#define thinking "thinking.ogg"
-#define pachin "pachin4.ogg"
-#define pochi "pochi.ogg"
-#define cancel "pochib.ogg"
-#define fall "fall.ogg"
+const int SCREEN_SIZE_X = 1280;
+const int SCREEN_SIZE_Y = 720;
+const int COLORBIT = 16;
 
-#define MESSAGEWAIT 120
-#define COMWAIT 60
-#define FALLWAIT 40
+const char thinking[] = "thinking.ogg";
+const char pachin[] = "pachin4.ogg";
+const char pochi[] = "pochi.ogg";
+const char cancel[] = "pochib.ogg";
+const char fall[] = "fall.ogg";
+
+const int MESSAGEWAIT = 120;
+const int COMWAIT = 60;
+const int FALLWAIT = 40;
 
 enum ComType {
 	com1,

@@ -1,14 +1,15 @@
 ﻿#pragma execution_character_set("utf-8")
 
 #include "Game.h"
-#include "SimpleAudioEngine.h"
 
 #include "Hand.h"
 #include "BoardNormal.h"
 
 #include "Title.h"
 
-using namespace CocosDenshion;
+#include "audio/include/AudioEngine.h"
+using namespace cocos2d::experimental;
+
 USING_NS_CC;
 Game::Game() {
 	mHand = new Hand();
@@ -93,10 +94,10 @@ void Game::initGame() {
 	else if (mMode == 2) {
 		mBoard->resetMega();
 		if (mDifficult == 0) {
-			mComtype = com2mega;
+			mComtype = com2;
 		}
 		else {
-			mComtype = com1mega;
+			mComtype = com1;
 		}
 	}
 	else if (mMode == 3) {
@@ -107,7 +108,26 @@ void Game::initGame() {
 		else {
 			mComtype = com1moroi;
 		}
-
+	}
+	else if (mMode == 4) {
+		mBoard->resetCustom8();
+		mHand->SetInputFlag(true);
+		if (mDifficult == 0) {
+			mComtype = com2;
+		}
+		else {
+			mComtype = com1;
+		}
+	}
+	else if (mMode == 5) {
+		mBoard->resetCustom16();
+		mHand->SetInputFlag(true);
+		if (mDifficult == 0) {
+			mComtype = com2;
+		}
+		else {
+			mComtype = com1;
+		}
 	}
 
 	initDraw();
@@ -140,8 +160,10 @@ void Game::initDraw() {
 		//カーソル
 		auto visibleSize = Director::getInstance()->getVisibleSize();
 		Vec2 origin = Director::getInstance()->getVisibleOrigin();
+		mInputX = touch->getLocationInView().x, mInputY = touch->getLocationInView().y;
+		mHand->SetClick(true);
 
-		if (mHand->GetInputFlag() == true && mBoard->GetTurn() != gray) {
+		if (mHand->GetInputFlag() == true && !mBoard->isFinish()) {
 			for (int i = 0; i < mBoard->GetBoardSize() + 1; i++) {
 				for (int j = 0; j < (mBoard->GetBoardSize() + 1); j++) {
 					if (i*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1)*(720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1)*(720 / (mBoard->GetBoardSize() + 1))) {
@@ -160,6 +182,7 @@ void Game::initDraw() {
 		auto target = (Sprite*)event->getCurrentTarget();
 		Rect targetBox = target->getBoundingBox();
 		Point touchPoint = Vec2(touch->getLocation().x, touch->getLocation().y);
+		mInputX = touch->getLocationInView().x, mInputY = touch->getLocationInView().y;
 		if (targetBox.containsPoint(touchPoint))
 		{
 
@@ -167,7 +190,7 @@ void Game::initDraw() {
 			auto visibleSize = Director::getInstance()->getVisibleSize();
 			Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-			if (mHand->GetInputFlag() == true && mBoard->GetTurn() != gray) {
+			if (mHand->GetInputFlag() == true && !mBoard->isFinish()) {
 				for (int i = 0; i < mBoard->GetBoardSize() + 1; i++) {
 					for (int j = 0; j < (mBoard->GetBoardSize() + 1); j++) {
 						if (i*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1)*(720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1)*(720 / (mBoard->GetBoardSize() + 1))) {
@@ -188,6 +211,7 @@ void Game::initDraw() {
 
 		this->updateGameTouch();
 		
+		mHand->SetClick(false);
 	};
 	this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
 
@@ -216,8 +240,8 @@ void Game::initDraw() {
 	this->addChild(square2, 0);
 
 	std::stringstream sblack, swhite;
-	sblack << "黒　" << mBoard->CountStone(black) << "個";
-	swhite << "白　" << mBoard->CountStone(white) << "個";
+	sblack << "黒　" << mBoard->CountStone(BorW::black) << "個";
+	swhite << "白　" << mBoard->CountStone(BorW::white) << "個";
 
 	auto blackLabel = Label::createWithTTF(sblack.str(), FONT_NAME, 64);
 	blackLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
@@ -248,6 +272,8 @@ void Game::initDraw() {
 
 
 	//ポーズ
+	std::string text;
+	if (mBoard->GetTurn() != gray) text = "ポーズ"; else text = "開始";
 	Rect rect3 = Rect(0, 0, 1202 - 990 - 2, 674 - 590 - 2);
 	Rect rect3_ = Rect(0, 0, 1202 - 990, 674 - 590);
 	Sprite* square3 = Sprite::create();
@@ -260,7 +286,7 @@ void Game::initDraw() {
 	square3_->setColor(Color3B(0, 0, 0));
 	this->addChild(square3, 2, "button3");
 	this->addChild(square3_, 1, "button3_");
-	auto ButtonLabel3 = Label::createWithTTF("ポーズ", FONT_NAME, 64);
+	auto ButtonLabel3 = Label::createWithTTF(text, FONT_NAME, 64);
 	ButtonLabel3->setPosition(square3->getPosition());
 	ButtonLabel3->setColor(Color3B(0, 0, 0));
 	this->addChild(ButtonLabel3, 3, "ButtonLabel3");
@@ -285,11 +311,11 @@ void Game::initDraw() {
 		{
 			if (mHand->GetInputFlag() == true) {
 				//PlaySoundMem(buttonsound, DX_PLAYTYPE_BACK);
-				SimpleAudioEngine::getInstance()->playEffect(pochi, false);
+				AudioEngine::play2d(pochi, false);
 
 				//scene = PAUSE;
 
-				Pause();
+				//Pause();
 			}
 		}
 	};
@@ -379,30 +405,41 @@ void Game::updateDraw() {
 	}
 	
 	auto state = (Label*)this->getChildByName("stateLabel");
-	if (mBoard->GetTurn() == black) {
-		state->setString("黒の番です");
-	}
-	else if (mBoard->GetTurn() == white) {
-		state->setString("白の番です");
+	if (!mBoard->isFinish()) {
+		if (mBoard->GetTurn() == black) {
+			state->setString("黒の番です");
+		}
+		else if (mBoard->GetTurn() == white) {
+			state->setString("白の番です");
+		}
+		else if (mBoard->GetTurn() == gray) {
+			state->setString("カスタムモード");
+		}
 	}
 
 	std::stringstream sblack, swhite;
-	sblack << "黒　" << mBoard->CountStone(black) << "個";
-	swhite << "白　" << mBoard->CountStone(white) << "個";
+	sblack << "黒　" << mBoard->CountStone(BorW::black) << "個";
+	swhite << "白　" << mBoard->CountStone(BorW::white) << "個";
 	auto blabel = (Label*)this->getChildByName("blackLabel");
 	auto wlabel = (Label*)this->getChildByName("whiteLabel");
 	blabel->setString(sblack.str());
 	wlabel->setString(swhite.str());
+
+	std::string text;
+	if (mBoard->GetTurn() != gray) text = "ポーズ"; else text = "開始";
+	((Label*)getChildByName("ButtonLabel3"))->setString(text);
+
 }
 
 void Game::updateGame() {
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-	if (mFallFlag == true && mBoard->GetTurn() != gray) {
+	if (mFallFlag == true && !mBoard->isFinish()) {
+		//もろい処理
 		mTimer++;
 		if (mTimer > FALLWAIT) {
-			mBoard->Fall();
+			mBoard->fall();
 
 			if (mBoard->CheckPass(mBoard->GetTurn()) == false) {
 				if (mBoard->CheckPass(mBoard->NotTurn(mBoard->GetTurn())) == true) {
@@ -420,9 +457,9 @@ void Game::updateGame() {
 			}
 
 			//PlaySoundMem(fallsound, DX_PLAYTYPE_BACK);
-			SimpleAudioEngine::getInstance()->playEffect(fall, false);
+			AudioEngine::play2d(fall, false);
 
-			if (mBoard->GetTurn() != mComFlag && mBoard->GetTurn() != gray && mMessageFlag == false) {
+			if (mBoard->GetTurn() != mComFlag && !mBoard->isFinish() && mMessageFlag == false) {
 				mHand->SetInputFlag(true);
 			}
 
@@ -432,7 +469,8 @@ void Game::updateGame() {
 		}
 	}
 	else if (mMessageFlag == true) {
-		if (mBoard->GetTurn() != gray) {
+		//パスとかゲーム終了時のメッセージボックス
+		if (!mBoard->isFinish()) {
 			if (mTimer == 0) {
 				//DrawBox(SCREEN_SIZE_X / 2 - 100 - 10, SCREEN_SIZE_Y / 2 - 100 / 2 - 10, SCREEN_SIZE_X / 2 + 100 + 10, SCREEN_SIZE_Y / 2 + 100 / 2 + 10, GetColor(0, 255, 255), true);
 				//DrawBox(SCREEN_SIZE_X / 2 - 100 - 10, SCREEN_SIZE_Y / 2 - 100 / 2 - 10, SCREEN_SIZE_X / 2 + 100 + 10, SCREEN_SIZE_Y / 2 + 100 / 2 + 10, GetColor(0, 0, 0), false);
@@ -475,10 +513,11 @@ void Game::updateGame() {
 			}
 		}
 		mTimer++;
+		//メッセージボックスを消す
 		if (mTimer > MESSAGEWAIT) {
 			mMessageFlag = false;
 			mFallFlag = false;
-			if (mBoard->GetTurn() != mComFlag) {
+			if (mBoard->GetTurn() != mComFlag || mBoard->isFinish()) {
 				mHand->SetInputFlag(true);
 			}
 			mTimer = 0;
@@ -488,11 +527,15 @@ void Game::updateGame() {
 			this->removeChildByName("passLabel");
 		}
 
-
 	}
-	else if (mMessageFlag == false && (mBoard->GetTurn() == mComFlag)) {
+	else if (mMessageFlag == false && (mBoard->GetTurn() == mComFlag) && !mBoard->isFinish()) {
+		//COMを呼び出す
 		mTimer++;
 		if (mTimer > COMWAIT) {
+#ifdef DEBUG
+		cocos2d::log("b:%d,w:%d\n", mBoard->CountStone(black), mBoard->CountStone(white));
+#endif // DEBUG
+
 			if (mComtype == com1) {
 				mBoard->Com1();
 			}
@@ -513,17 +556,20 @@ void Game::updateGame() {
 				mBoard->Com2Murora();
 			}
 			else if (mComtype == com2mega) {
-				mBoard->Com2Mega();
+				mBoard->Com2();
 			}
 			else if (mComtype == com2moroi) {
 				mBoard->Com2moroi();
 			}
 
-			//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
-			SimpleAudioEngine::getInstance()->playEffect(pachin, false);
+#ifdef DEBUG
+			cocos2d::log("b:%d,w:%d\n", mBoard->CountStone(black), mBoard->CountStone(white));
+#endif // DEBUG
 
-			//if (1) {
-			//if (0) {
+			//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
+			AudioEngine::play2d(pachin, false);
+
+			//ターンチェンジとパス&ゲームセット判定
 			if (mBoard->TurnChange() == false) {
 				if (mBoard->TurnChange() == false) {
 
@@ -542,7 +588,7 @@ void Game::updateGame() {
 				mHand->SetInputFlag(true);
 
 			}
-			if (mComtype == com1moroi || mComtype == com2moroi) {
+			if (mBoard->getMode() == MOROI) {
 				mHand->SetInputFlag(false);
 				mFallFlag = true;
 			}
@@ -556,10 +602,10 @@ void Game::updateGame() {
 
 void Game::GetResultMessage() {
 	std::string str;
-	if (mBoard->CountStone(black) > mBoard->CountStone(white)) {
+	if (mBoard->CountStone(BorW::black) > mBoard->CountStone(BorW::white)) {
 		str = "黒の勝ちです";
 	}
-	else if (mBoard->CountStone(black) < mBoard->CountStone(white)) {
+	else if (mBoard->CountStone(BorW::black) < mBoard->CountStone(BorW::white)) {
 		str = "白の勝ちです";
 	}
 	else {
@@ -593,39 +639,76 @@ void Game::GetResultMessage() {
 }
 
 void Game::updateGameTouch() {
+	//プレイヤーがどこかクリックしたときの処理
+	if (mHand->CheckMouseDown() == true) {
+		if (mBoard->GetTurn() == gray) {
+			if (mBoard->put(mHand->GetPointX(), mHand->GetPointY()) == true) {
+				AudioEngine::play2d(pochi, false);
+			}
+		}
+		else if (mBoard->put(mHand->GetPointX(), mHand->GetPointY()) == true) {
+				//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
+				AudioEngine::play2d(pachin, false);
 
-	if (mHand->GetInputFlag() == true) {
-		if (mBoard->put(mHand->GetPointX(), mHand->GetPointY()) == true) {
-			//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
-			SimpleAudioEngine::getInstance()->playEffect(pachin, false);
-
-			if (mBoard->TurnChange() == false) {
 				if (mBoard->TurnChange() == false) {
-					GetResultMessage();
-					mMessageFlag = true;
-					mHand->SetInputFlag(false);
-					mBoard->finish();
-					//break;
+					if (mBoard->TurnChange() == false) {
+						GetResultMessage();
+						mMessageFlag = true;
+						mHand->SetInputFlag(false);
+						mBoard->finish();
+						//break;
 
+					}
+					else {
+						mHand->SetInputFlag(false);
+						mMessageFlag = true;
+					}
 				}
-				else {
+
+				if (mBoard->GetTurn() == mComFlag) {
 					mHand->SetInputFlag(false);
-					mMessageFlag = true;
 				}
-			}
 
-			if (mBoard->GetTurn() == mComFlag) {
-				mHand->SetInputFlag(false);
-			}
-
-			if (mComtype == com1moroi || mComtype == com2moroi) {
-				mHand->SetInputFlag(false);
-				mFallFlag = true;
-			}
+				if (mComtype == com1moroi || mComtype == com2moroi) {
+					mHand->SetInputFlag(false);
+					mFallFlag = true;
+				}
 		}
 
 	}
 	
+	// inputFlagに関係ないクリック処理
+	if (mHand->CheckMouseDownNoCheckFlag() == true) {
+		if (990 < mInputX && mInputX < 1202 && 590 < mInputY && mInputY < 674) {
+			if (mHand->GetInputFlag() == true) {
+				// PlaySoundMem(buttonsound, DX_PLAYTYPE_BACK);
+				AudioEngine::play2d(pochi, false);
+				if (mBoard->GetTurn() != gray) {
+					Pause();
+				}
+				else {
+					if (mBoard->TurnChange() == false) {
+						if (mBoard->TurnChange() == false) {
+							GetResultMessage();
+							mMessageFlag = true;
+							mHand->SetInputFlag(false);
+							mBoard->finish();
+							//break;
+
+						}
+						else {
+							mHand->SetInputFlag(false);
+							mMessageFlag = true;
+						}
+					}
+					if (mBoard->GetTurn() == mComFlag) {
+						mHand->SetInputFlag(false);
+					}
+				}
+			}
+		}
+	}
+
 	updateDraw();
 }
 
@@ -689,7 +772,7 @@ void Game::Pause() {
 		target->setColor(Color3B(0, 255, 0));
 		if (targetBox.containsPoint(touchPoint))
 		{
-			SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+			AudioEngine::play2d(cancel, false);
 
 			this->removeChildByName("pauseLayer");
 		}
@@ -730,23 +813,36 @@ void Game::Pause() {
 		target->setColor(Color3B(0, 255, 0));
 		if (targetBox.containsPoint(touchPoint))
 		{
-			SimpleAudioEngine::getInstance()->playEffect(pochi, false);
-			mHand->SetInputFlag(true);
-			if (mBoard->GetBoardSize() == 7) {
-				mBoard->reset();
-			}
-			else if (mBoard->GetBoardSize() == 9) {
-				mBoard->resetMurora();
-			}
-			else if (mBoard->GetBoardSize() == 15) {
-				mBoard->resetMega();
-			}
-			else {
-				mBoard->resetMoroi();
-			}
+			AudioEngine::play2d(pochi, false);
+			mHand->SetInputFlag(true);	
 			if (mComFlag == black) {
 				mHand->SetInputFlag(false);
 			}
+
+			switch (mBoard->getMode())
+			{
+			case gameMode::NORMAL:
+				mBoard->reset();
+				break;
+			case gameMode::MURORA:
+				mBoard->resetMurora();
+				break;
+			case gameMode::MEGA:
+				mBoard->resetMega();
+				break;
+			case gameMode::MOROI:
+				mBoard->resetMoroi();
+				break;
+			case gameMode::CUSTOM8:
+				mBoard->resetCustom8();
+				break;
+			case gameMode::CUSTOM16:
+				mBoard->resetCustom16();
+				break;
+			default:
+				break;
+			}
+
 			this->removeChildByName("pauseLayer");
 			updateDraw();
 		}
@@ -787,8 +883,8 @@ void Game::Pause() {
 		target->setColor(Color3B(0, 255, 0));
 		if (targetBox.containsPoint(touchPoint))
 		{
-			SimpleAudioEngine::getInstance()->playEffect(cancel, false);
-			SimpleAudioEngine::getInstance()->stopBackgroundMusic(thinking);
+			AudioEngine::stopAll();
+			AudioEngine::play2d(cancel, false);
 			Director::getInstance()->replaceScene(TransitionRotoZoom::create(0.5f, Title::createScene()));
 		}
 	};

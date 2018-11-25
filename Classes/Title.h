@@ -15,9 +15,9 @@ public:
 private:
 	int mPoint;
 	int mStep;
-	int mMode;
+	int mMode;	// どんなリバーシ？
 	bool mCom;
-	bool mMenumega;
+	int mMenumega;
 	BorW mComturn;
 	//BorW mComFlag;
 	//ComType mComtype;

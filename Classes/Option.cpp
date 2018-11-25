@@ -1,6 +1,6 @@
 ﻿#pragma execution_character_set("utf-8")
-#include "SimpleAudioEngine.h"
-using namespace CocosDenshion;
+#include "audio/include/AudioEngine.h"
+using namespace cocos2d::experimental;
 
 #include "Option.h"
 #include "define.h"
@@ -179,7 +179,7 @@ void Option::TouchAction() {
 	switch (mPoint)
 	{
 	case 1:
-		SimpleAudioEngine::getInstance()->playEffect(pochi, false);
+		AudioEngine::play2d(pochi, false);
 		if (mGuide == true) {
 			mGuide = false;
 			button1->setString("ガイド：オフ");
@@ -190,7 +190,7 @@ void Option::TouchAction() {
 		}
 		break;
 	case 2: {
-		SimpleAudioEngine::getInstance()->playEffect(pochi, false);
+		AudioEngine::play2d(pochi, false);
 		//scene = CREDIT;
 
 		//背景
@@ -217,13 +217,13 @@ void Option::TouchAction() {
 		listener->onTouchEnded = [this](Touch* touch, Event* event) {
 			this->removeChildByName("back_c");
 			this->removeChildByName("label_c");
-			SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+			AudioEngine::play2d(cancel, false);
 		};
 		this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
 
 		break; }
 	case 3:
-		SimpleAudioEngine::getInstance()->playEffect(cancel, false);
+		AudioEngine::play2d(cancel, false);
 		auto _userDef = UserDefault::getInstance();
 		_userDef->setBoolForKey("guide",mGuide);
 		_userDef->flush();
