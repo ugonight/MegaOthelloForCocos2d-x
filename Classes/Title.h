@@ -22,6 +22,7 @@ private:
 	//BorW mComFlag;
 	//ComType mComtype;
 	int mDifficult;
+	int mPageHistory;	// í—ğ‚Ìƒy[ƒW
 
 	void onTouchEnd(cocos2d::Touch *touch, cocos2d::Event *event);
 	void TouchAction();

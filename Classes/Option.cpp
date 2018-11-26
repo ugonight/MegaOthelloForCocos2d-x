@@ -202,7 +202,7 @@ void Option::TouchAction() {
 		this->addChild(square, 5, "back_c");
 
 		//文字
-		auto Labelc = Label::createWithTTF("プログラム・BGM・効果音\n  ドスカルゴン\n\nアイコン・スマホアプリ化\n  ugonight\n\n\n遊んでくださった皆様、特にネットでの配信を希望してくださった方に\n深く感謝します。\n\n\n\n                                                                  クリックで戻る", FONT_NAME, 32);
+		auto Labelc = Label::createWithTTF("プログラム・BGM・効果音\n  ドスカルゴン\n\nアイコン・スマホアプリ化\n  ugonight\n\n\n遊んでくださった皆様、特にネットでの配信を希望してくださった方に\n深く感謝します。\n\n\n感想、要望はtwitter(@dosscargon)までお願いします。\n\n                                                                  クリックで戻る", FONT_NAME, 32);
 		Labelc->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 		Labelc->setPosition(Vec2(64, visibleSize.height - 64));
 		Labelc->setColor(Color3B(0, 0, 0));

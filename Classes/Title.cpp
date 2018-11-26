@@ -39,6 +39,7 @@ bool Title::init() {
 
 	mStep = 1;
 	mPoint = 0;
+	mPageHistory = 0;
 
 	//FONT_NAME = "fonts/mgenplus-1cp-medium.ttf";
 
@@ -333,8 +334,35 @@ void Title::TouchAction() {
 			};
 			listener->onTouchMoved = [this](Touch* touch, Event* event) {};
 			listener->onTouchEnded = [this](Touch* touch, Event* event) {
-				this->removeChildByName("layer_h");
-				AudioEngine::play2d(cancel, false);
+				mPageHistory++;
+				if (mPageHistory > 1) {
+					// 戦歴を閉じる
+					mPageHistory = 0;
+					this->removeChildByName("layer_h");
+					AudioEngine::play2d(cancel, false);
+				}
+				else {
+					auto layer = this->getChildByName("layer_h");
+
+					// ページ切り替え
+					mPageHistory++;
+					((Label*)layer->getChildByName("rLabel0"))->setString("カスタム 8×8");
+					((Label*)layer->getChildByName("rLabel1"))->setString("カスタム 16×16");
+					((Label*)layer->getChildByName("rLabel2"))->setString("");
+					((Label*)layer->getChildByName("rLabel3"))->setString("");
+
+					for (int i = 4; i < 8; i++) ((Label*)layer->getChildByName(StringUtils::format("difficult%d", i)))->setString("");
+
+					auto _userDef = UserDefault::getInstance();
+					for (int i = 0; i < 2; i++) {
+						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i)))->setString(StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%deasywin",i+5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%deasylose", i + 5).c_str())));
+						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1)))->setString(StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%dhardwin", i + 5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%dhardlose", i + 5).c_str())));
+					}
+					for (int i = 2; i < 4; i++) {
+						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i)))->setString("");
+						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1)))->setString("");
+					}
+				}
 			};
 			this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
 
@@ -350,7 +378,7 @@ void Title::TouchAction() {
 				label[i] = Label::createWithTTF("", FONT_NAME, 64); 
 				label[i]->setPosition(Vec2(origin.x + visibleSize.width / 6, origin.y + (visibleSize.height / 5) * (4 - i)));
 				label[i]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label[i], 1);
+				layer->addChild(label[i], 1, StringUtils::format("rLabel%d", i));
 			}
 			label[0]->setString("普通のリバーシ");
 			label[1]->setString("へんなリバーシ");
@@ -363,11 +391,11 @@ void Title::TouchAction() {
 				label1[2 * i] = Label::createWithTTF("やさしい", FONT_NAME, 64);
 				label1[2 * i]->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + (visibleSize.height / 5) * (4 - i) + 32));
 				label1[2 * i]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label1[2 * i], 1);
+				layer->addChild(label1[2 * i], 1, StringUtils::format("difficult%d", 2 * i));
 				label1[2 * i + 1] = Label::createWithTTF("たいへん", FONT_NAME, 64);
 				label1[2 * i + 1]->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + (visibleSize.height / 5) * (4 - i) - 32));
 				label1[2 * i + 1]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label1[2 * i + 1], 1);
+				layer->addChild(label1[2 * i + 1], 1, StringUtils::format("difficult%d", 2 * i+1));
 			}
 
 			//結果
@@ -381,7 +409,7 @@ void Title::TouchAction() {
 				label2[2 * i] = Label::createWithTTF(str3.str(), FONT_NAME, 64);
 				label2[2 * i]->setPosition(Vec2(origin.x + visibleSize.width * 3 / 4, origin.y + (visibleSize.height / 5) * (4 - i) + 32));
 				label2[2 * i]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label2[2 * i], 1);
+				layer->addChild(label2[2 * i], 1, StringUtils::format("result%d", 2 * i));
 				str1.str(""); str2.str(""); str3.str("");
 				str1.clear(); str2.clear(); str3.clear();
 				str1 << "mode" << i + 1 << "hardwin";
@@ -390,7 +418,7 @@ void Title::TouchAction() {
 				label2[2 * i + 1] = Label::createWithTTF(str3.str(), FONT_NAME, 64);
 				label2[2 * i + 1]->setPosition(Vec2(origin.x + visibleSize.width * 3 / 4, origin.y + (visibleSize.height / 5) * (4 - i) - 32));
 				label2[2 * i + 1]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label2[2 * i + 1], 1);
+				layer->addChild(label2[2 * i + 1], 1, StringUtils::format("result%d", 2 * i + 1));
 				str1.str(""); str2.str(""); str3.str("");
 				str1.clear(); str2.clear(); str3.clear();
 			}
@@ -556,7 +584,7 @@ void Title::TouchAction() {
 		break;
 	}
 
-	if (mPoint == 1 || mPoint == 2 || mPoint == 5) {
+	if (mPoint == 1 || mPoint == 2 || mPoint == 5 || mPoint == 6) {
 		AudioEngine::play2d(pochi,false);
 	}
 	else if (mPoint == 3) {
