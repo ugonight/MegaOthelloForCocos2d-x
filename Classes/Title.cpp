@@ -1,11 +1,12 @@
 ﻿#pragma execution_character_set("utf-8")
 
 #include "audio/include/AudioEngine.h"
-using namespace cocos2d::experimental;
+// using namespace cocos2d::experimental;
 
 #include "Title.h"
 #include "Option.h"
 #include "Game.h"
+#include "Util.h"
 
 USING_NS_CC;
 
@@ -59,12 +60,12 @@ bool Title::init() {
 
 	//タイトル
 	auto titleLabel = Label::createWithTTF("リバーシ", FONT_NAME, 128);
-	titleLabel->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - ( 50 + 64 )));
+	titleLabel->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - (50 + 64)));
 	titleLabel->setTextColor(Color4B::BLACK);
 	this->addChild(titleLabel, 1, "titleLabel");
 
 	//ボタン1
-	Rect rect1 = Rect(0, 0, 100 * 7-2, 140-2);
+	Rect rect1 = Rect(0, 0, 100 * 7 - 2, 140 - 2);
 	Rect rect1_ = Rect(0, 0, 100 * 7, 140);
 	Sprite* square1 = Sprite::create();
 	Sprite* square1_ = Sprite::create();
@@ -157,7 +158,7 @@ bool Title::init() {
 		return true;
 	};
 	listener3->onTouchMoved = [this](Touch* touch, Event* event) {};
-	listener3->onTouchEnded =  CC_CALLBACK_2(Title::onTouchEnd, this);
+	listener3->onTouchEnded = CC_CALLBACK_2(Title::onTouchEnd, this);
 	this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener3, square3);
 
 	//設定ボタン
@@ -179,8 +180,8 @@ bool Title::init() {
 	listener4->onTouchBegan = [this](Touch* touch, Event* event) {
 		auto target = (Sprite*)event->getCurrentTarget();
 		Rect targetBox = target->getBoundingBox();
-		Point touchPoint = Vec2(touch->getLocation().x, touch->getLocation().y);	
-		
+		Point touchPoint = Vec2(touch->getLocation().x, touch->getLocation().y);
+
 		if (targetBox.containsPoint(touchPoint))
 		{
 			target->setColor(Color3B(255, 255, 0));
@@ -277,7 +278,7 @@ bool Title::init() {
 	return true;
 }
 
-void Title::onTouchEnd(Touch *touch, Event *event) {
+void Title::onTouchEnd(Touch* touch, Event* event) {
 	auto target = (Sprite*)event->getCurrentTarget();
 	Rect targetBox = target->getBoundingBox();
 	Point touchPoint = Vec2(touch->getLocation().x, touch->getLocation().y);
@@ -288,7 +289,7 @@ void Title::onTouchEnd(Touch *touch, Event *event) {
 	}
 }
 
-void Title::TouchAction() {	
+void Title::TouchAction() {
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
@@ -300,10 +301,10 @@ void Title::TouchAction() {
 			AudioEngine::play2d(cancel, false);
 			//Close the cocos2d-x game scene and quit the application
 			Director::getInstance()->end();
-			
-			#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-			    exit(0);
-			#endif
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+			exit(0);
+#endif
 		}
 		mMenumega = false;
 		mStep--;
@@ -319,7 +320,7 @@ void Title::TouchAction() {
 		else {	//戦歴
 			auto layer = Layer::create();
 			this->addChild(layer, 5, "layer_h");
-			
+
 			//背景
 			Rect rect = Rect(0, 0, visibleSize.width, visibleSize.height);
 			Sprite* square = Sprite::create();
@@ -346,21 +347,21 @@ void Title::TouchAction() {
 
 					// ページ切り替え
 					mPageHistory++;
-					((Label*)layer->getChildByName("rLabel0"))->setString("カスタム 8×8");
-					((Label*)layer->getChildByName("rLabel1"))->setString("カスタム 16×16");
-					((Label*)layer->getChildByName("rLabel2"))->setString("");
-					((Label*)layer->getChildByName("rLabel3"))->setString("");
+					Util::changeLabelText(((Label*)layer->getChildByName("rLabel0")), "カスタム 8×8");
+					Util::changeLabelText(((Label*)layer->getChildByName("rLabel1")), "カスタム 16×16");
+					Util::changeLabelText(((Label*)layer->getChildByName("rLabel2")), "");
+					Util::changeLabelText(((Label*)layer->getChildByName("rLabel3")), "");
 
-					for (int i = 4; i < 8; i++) ((Label*)layer->getChildByName(StringUtils::format("difficult%d", i)))->setString("");
+					for (int i = 4; i < 8; i++) Util::changeLabelText(((Label*)layer->getChildByName(StringUtils::format("difficult%d", i))), "");
 
 					auto _userDef = UserDefault::getInstance();
 					for (int i = 0; i < 2; i++) {
-						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i)))->setString(StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%deasywin",i+5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%deasylose", i + 5).c_str())));
-						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1)))->setString(StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%dhardwin", i + 5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%dhardlose", i + 5).c_str())));
+						Util::changeLabelText(((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i))), StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%deasywin", i + 5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%deasylose", i + 5).c_str())));
+						Util::changeLabelText(((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1))), StringUtils::format("%d勝%d敗", _userDef->getIntegerForKey(StringUtils::format("mode%dhardwin", i + 5).c_str()), _userDef->getIntegerForKey(StringUtils::format("mode%dhardlose", i + 5).c_str())));
 					}
 					for (int i = 2; i < 4; i++) {
-						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i)))->setString("");
-						((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1)))->setString("");
+						Util::changeLabelText(((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i))), "");
+						Util::changeLabelText(((Label*)layer->getChildByName(StringUtils::format("result%d", 2 * i + 1))), "");
 					}
 				}
 			};
@@ -374,16 +375,17 @@ void Title::TouchAction() {
 
 			//リバーシ
 			Label* label[4];
-			for (int i = 0; i < 4; i++) { 
-				label[i] = Label::createWithTTF("", FONT_NAME, 64); 
+			for (int i = 0; i < 4; i++) {
+				label[i] = Label::createWithTTF("", FONT_NAME, 64);
 				label[i]->setPosition(Vec2(origin.x + visibleSize.width / 6, origin.y + (visibleSize.height / 5) * (4 - i)));
 				label[i]->setColor(Color3B(0, 0, 0));
 				layer->addChild(label[i], 1, StringUtils::format("rLabel%d", i));
 			}
-			label[0]->setString("普通のリバーシ");
-			label[1]->setString("へんなリバーシ");
-			label[2]->setString("メガリバーシ");
-			label[3]->setString("もろいリバーシ");
+			//label[0]->setString("普通のリバーシ");
+			Util::changeLabelText(label[0], "普通のリバーシ");
+			Util::changeLabelText(label[1], "へんなリバーシ");
+			Util::changeLabelText(label[2], "メガリバーシ");
+			Util::changeLabelText(label[3], "もろいリバーシ");
 
 			//やさしい・たいへん
 			Label* label1[8];
@@ -395,12 +397,12 @@ void Title::TouchAction() {
 				label1[2 * i + 1] = Label::createWithTTF("たいへん", FONT_NAME, 64);
 				label1[2 * i + 1]->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + (visibleSize.height / 5) * (4 - i) - 32));
 				label1[2 * i + 1]->setColor(Color3B(0, 0, 0));
-				layer->addChild(label1[2 * i + 1], 1, StringUtils::format("difficult%d", 2 * i+1));
+				layer->addChild(label1[2 * i + 1], 1, StringUtils::format("difficult%d", 2 * i + 1));
 			}
 
 			//結果
 			Label* label2[8];
-			auto _userDef = UserDefault::getInstance();	
+			auto _userDef = UserDefault::getInstance();
 			std::stringstream str1, str2, str3;
 			for (int i = 0; i < 4; i++) {
 				str1 << "mode" << i + 1 << "easywin";
@@ -538,37 +540,32 @@ void Title::TouchAction() {
 	case 1:
 		//sprintf_s(button1, "ひとりでプレイ");
 		//sprintf_s(button2, "ふたりでプレイ");
-		button1->setString("ひとりでプレイ");
-		button2->setString("ふたりでプレイ");
+		Util::changeLabelText(button1, "ひとりでプレイ");
+		Util::changeLabelText(button2, "ふたりでプレイ");
 		break;
 	case 2:
 		if (mMenumega == false) {
-			button1->setString( "普通のリバーシ");
-			button2->setString( "へんなリバーシ");
+			Util::changeLabelText(button1, "普通のリバーシ");
+			Util::changeLabelText(button2, "へんなリバーシ");
 		}
 		else if (mMenumega == 1) {
-			button1->setString("メガリバーシ");
-			button2->setString("もろいリバーシ");
+			Util::changeLabelText(button1, "メガリバーシ");
+			Util::changeLabelText(button2, "もろいリバーシ");
 		}
 		else if (mMenumega == 2) {
-			button1->setString("カスタム 8×8");
-			button2->setString("カスタム16×16");
+			Util::changeLabelText(button1, "カスタム 8×8");
+			Util::changeLabelText(button2, "カスタム16×16");
 		}
 		break;
 	case 3:
-		button1->setString( "先攻で始める");
-		button2->setString( "後攻で始める");
+		Util::changeLabelText(button1, "先攻で始める");
+		Util::changeLabelText(button2, "後攻で始める");
 		break;
 	case 4:
-		button1->setString( "やさしい");
-		button2->setString( "たいへん");
+		Util::changeLabelText(button1, "やさしい");
+		Util::changeLabelText(button2, "たいへん");
 		break;
 	case 9:
-
-		//mStep = 1;
-
-		//button1->setString("ひとりでプレイ");
-		//button2->setString("ふたりでプレイ");
 
 		AudioEngine::play2d(thinking, true);
 		//scene = GAME;
@@ -585,7 +582,7 @@ void Title::TouchAction() {
 	}
 
 	if (mPoint == 1 || mPoint == 2 || mPoint == 5 || mPoint == 6) {
-		AudioEngine::play2d(pochi,false);
+		AudioEngine::play2d(pochi, false);
 	}
 	else if (mPoint == 3) {
 		AudioEngine::play2d(cancel, false);
@@ -595,16 +592,16 @@ void Title::TouchAction() {
 	auto square4 = this->getChildByName("button4");
 	auto square4_ = this->getChildByName("button4_");
 	auto label4 = (Label*)this->getChildByName("ButtonLabel4");
-	if (mStep == 1 || ( mStep == 2 && mCom == true )) {
+	if (mStep == 1 || (mStep == 2 && mCom == true)) {
 		square4->setVisible(true);
 		square4_->setVisible(true);
 		label4->setVisible(true);
 		this->getEventDispatcher()->resumeEventListenersForTarget(square4);
 		if (mStep == 1) {
-			label4->setString("設定");
+			Util::changeLabelText(label4, "設定");
 		}
 		else {
-			label4->setString("戦歴");
+			Util::changeLabelText(label4, "戦歴");
 		}
 	}
 	else {
@@ -617,10 +614,10 @@ void Title::TouchAction() {
 	//戻る・終了
 	auto label3 = (Label*)this->getChildByName("ButtonLabel3");
 	if (mStep != 1) {
-		label3->setString("戻る");
+		Util::changeLabelText(label3, "戻る");
 	}
 	else {
-		label3->setString("終了");
+		Util::changeLabelText(label3, "終了");
 	}
 
 	//スクロールボタン

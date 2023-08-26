@@ -1,5 +1,5 @@
 #include "audio/include/AudioEngine.h"
-using namespace cocos2d::experimental;
+// using namespace cocos2d::experimental;
 
 #include "WakeUpSceneFactory.h"
 #include "Title.h"

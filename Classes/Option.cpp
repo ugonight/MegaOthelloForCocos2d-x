@@ -1,10 +1,11 @@
 ﻿#pragma execution_character_set("utf-8")
 #include "audio/include/AudioEngine.h"
-using namespace cocos2d::experimental;
+// using namespace cocos2d::experimental;
 
 #include "Option.h"
 #include "define.h"
 #include "Title.h"
+#include "Util.h"
 
 USING_NS_CC;
 
@@ -182,11 +183,11 @@ void Option::TouchAction() {
 		AudioEngine::play2d(pochi, false);
 		if (mGuide == true) {
 			mGuide = false;
-			button1->setString("ガイド：オフ");
+			Util::changeLabelText(button1, "ガイド：オフ");
 		}
 		else {
 			mGuide = true;
-			button1->setString("ガイド：オン");
+			Util::changeLabelText(button1, "ガイド：オン");
 		}
 		break;
 	case 2: {

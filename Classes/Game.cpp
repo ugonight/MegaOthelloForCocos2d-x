@@ -6,9 +6,10 @@
 #include "BoardNormal.h"
 
 #include "Title.h"
+#include "Util.h"
 
 #include "audio/include/AudioEngine.h"
-using namespace cocos2d::experimental;
+// using namespace cocos2d::experimental;
 
 USING_NS_CC;
 Game::Game() {
@@ -156,7 +157,7 @@ void Game::initDraw() {
 	square->setColor(Color3B(0, 255, 0));
 	this->addChild(square, 0, "back");
 	auto listener = EventListenerTouchOneByOne::create();
-	listener->onTouchBegan = [this](Touch* touch, Event* event) { 
+	listener->onTouchBegan = [this](Touch* touch, Event* event) {
 		//カーソル
 		auto visibleSize = Director::getInstance()->getVisibleSize();
 		Vec2 origin = Director::getInstance()->getVisibleOrigin();
@@ -166,17 +167,17 @@ void Game::initDraw() {
 		if (mHand->GetInputFlag() == true && !mBoard->isFinish()) {
 			for (int i = 0; i < mBoard->GetBoardSize() + 1; i++) {
 				for (int j = 0; j < (mBoard->GetBoardSize() + 1); j++) {
-					if (i*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1)*(720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1)*(720 / (mBoard->GetBoardSize() + 1))) {
+					if (i * (720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j * (720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1) * (720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1) * (720 / (mBoard->GetBoardSize() + 1))) {
 						//DrawBox(i*(720 / (board.GetBoardSize() + 1)), j*(720 / (board.GetBoardSize() + 1)), (i + 1)*(720 / (board.GetBoardSize() + 1)), (j + 1)*(720 / (board.GetBoardSize() + 1)), GetColor(255, 255, 0), TRUE);
 						auto cursor = getChildByName("boardLayer")->getChildByName("cursor");
 						cursor->setVisible(true);
-						cursor->setPosition(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j*(720 / (mBoard->GetBoardSize() + 1)) + 1));
+						cursor->setPosition(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j * (720 / (mBoard->GetBoardSize() + 1)) + 1));
 					}
 				}
 			}
 		}
 
-		return true; 
+		return true;
 	};
 	listener->onTouchMoved = [this](Touch* touch, Event* event) {
 		auto target = (Sprite*)event->getCurrentTarget();
@@ -193,11 +194,11 @@ void Game::initDraw() {
 			if (mHand->GetInputFlag() == true && !mBoard->isFinish()) {
 				for (int i = 0; i < mBoard->GetBoardSize() + 1; i++) {
 					for (int j = 0; j < (mBoard->GetBoardSize() + 1); j++) {
-						if (i*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j*(720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1)*(720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1)*(720 / (mBoard->GetBoardSize() + 1))) {
+						if (i * (720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().x && j * (720 / (mBoard->GetBoardSize() + 1)) < touch->getLocationInView().y && touch->getLocationInView().x < (i + 1) * (720 / (mBoard->GetBoardSize() + 1)) && touch->getLocationInView().y < (j + 1) * (720 / (mBoard->GetBoardSize() + 1))) {
 							//DrawBox(i*(720 / (board.GetBoardSize() + 1)), j*(720 / (board.GetBoardSize() + 1)), (i + 1)*(720 / (board.GetBoardSize() + 1)), (j + 1)*(720 / (board.GetBoardSize() + 1)), GetColor(255, 255, 0), TRUE);
 							auto cursor = getChildByName("boardLayer")->getChildByName("cursor");
 							cursor->setVisible(true);
-							cursor->setPosition(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j*(720 / (mBoard->GetBoardSize() + 1)) + 1));
+							cursor->setPosition(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j * (720 / (mBoard->GetBoardSize() + 1)) + 1));
 						}
 					}
 				}
@@ -210,7 +211,7 @@ void Game::initDraw() {
 		cursor->setVisible(false);
 
 		this->updateGameTouch();
-		
+
 		mHand->SetClick(false);
 	};
 	this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, square);
@@ -218,7 +219,7 @@ void Game::initDraw() {
 	//縦の線
 	for (int i = 0; i < mBoard->GetBoardSize() + 1 + 1; i++) {
 		DrawNode* line = DrawNode::create();
-		line->drawSegment(Vec2(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)), 0), Vec2(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)), 720), 1.0f, Color4F::BLACK);
+		line->drawSegment(Vec2(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)), 0), Vec2(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)), 720), 1.0f, Color4F::BLACK);
 		this->addChild(line, 1);
 	}
 
@@ -226,7 +227,7 @@ void Game::initDraw() {
 	for (int i = 0; i < mBoard->GetBoardSize() + 1 + 1; i++) {
 		//DrawLine(0, i*(720 / (board.GetBoardSize() + 1)), 720, i*(720 / (board.GetBoardSize() + 1)), GetColor(0, 0, 0), 2);
 		DrawNode* line = DrawNode::create();
-		line->drawSegment(Vec2(origin.x + 0, origin.y + i*(720 / (mBoard->GetBoardSize() + 1))), Vec2(origin.x + 720, origin.y + i*(720 / (mBoard->GetBoardSize() + 1))), 1.0f, Color4F::BLACK);
+		line->drawSegment(Vec2(origin.x + 0, origin.y + i * (720 / (mBoard->GetBoardSize() + 1))), Vec2(origin.x + 720, origin.y + i * (720 / (mBoard->GetBoardSize() + 1))), 1.0f, Color4F::BLACK);
 		this->addChild(line, 1);
 	}
 
@@ -333,7 +334,7 @@ void Game::updateDraw() {
 
 
 	//置ける場所の色を変える(ガイド)	
-	Rect rect = Rect(0, 0, 720 / (mBoard->GetBoardSize() + 1)-2, 720 / (mBoard->GetBoardSize() + 1)-2);
+	Rect rect = Rect(0, 0, 720 / (mBoard->GetBoardSize() + 1) - 2, 720 / (mBoard->GetBoardSize() + 1) - 2);
 	if (mGuide == true) {
 		if (mHand->GetInputFlag() == true) {
 			for (int i = 0; i < mBoard->GetBoardSize() + 1; i++) {
@@ -343,7 +344,7 @@ void Game::updateDraw() {
 						Sprite* square = Sprite::create();
 						square->setTextureRect(rect);
 						square->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-						square->setPosition(Vec2(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j*(720 / (mBoard->GetBoardSize() + 1)))-1));
+						square->setPosition(Vec2(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j * (720 / (mBoard->GetBoardSize() + 1))) - 1));
 						square->setColor(Color3B(255, 186, 216));
 						boardLayer->addChild(square, 0);
 					}
@@ -368,19 +369,19 @@ void Game::updateDraw() {
 		for (int j = 0; j < mBoard->GetBoardSize() + 1; j++) {
 			if (mBoard->GetBoard(i, j) == black) {
 				//DrawCircle((i + 0.5)*(720 / (board.GetBoardSize() + 1)), (j + 0.5)*(720 / (board.GetBoardSize() + 1)), (720 / (board.GetBoardSize() + 1)) / 2 * 0.8, GetColor(0, 0, 0), TRUE);
-				DrawNode *dot = DrawNode::create();
+				DrawNode* dot = DrawNode::create();
 				dot->drawDot(Vec2::ZERO, (720 / (mBoard->GetBoardSize() + 1)) / 2 * 0.8, Color4F::BLACK);
-				dot->setPosition(Vec2(origin.x + (i + 0.5)*(720 / (mBoard->GetBoardSize() + 1)), origin.y + visibleSize.height - (j + 0.5)*(720 / (mBoard->GetBoardSize() + 1))));
+				dot->setPosition(Vec2(origin.x + (i + 0.5) * (720 / (mBoard->GetBoardSize() + 1)), origin.y + visibleSize.height - (j + 0.5) * (720 / (mBoard->GetBoardSize() + 1))));
 				boardLayer->addChild(dot, 2);
 			}
 			else if (mBoard->GetBoard(i, j) == white) {
 				//DrawCircle((i + 0.5)*(720 / (board.GetBoardSize() + 1)), (j + 0.5)*(720 / (board.GetBoardSize() + 1)), (720 / (board.GetBoardSize() + 1)) / 2 * 0.8, GetColor(255, 255, 255), TRUE);
 				//DrawCircle((i + 0.5)*(720 / (board.GetBoardSize() + 1)), (j + 0.5)*(720 / (board.GetBoardSize() + 1)), (720 / (board.GetBoardSize() + 1)) / 2 * 0.8, GetColor(0, 0, 0), FALSE);
-				DrawNode *dot = DrawNode::create();
+				DrawNode* dot = DrawNode::create();
 				dot->drawDot(Vec2::ZERO, (720 / (mBoard->GetBoardSize() + 1)) / 2 * 0.8, Color4F::WHITE);
-				dot->setPosition(Vec2(origin.x + (i + 0.5)*(720 / (mBoard->GetBoardSize() + 1)), origin.y + visibleSize.height - (j + 0.5)*(720 / (mBoard->GetBoardSize() + 1))));
+				dot->setPosition(Vec2(origin.x + (i + 0.5) * (720 / (mBoard->GetBoardSize() + 1)), origin.y + visibleSize.height - (j + 0.5) * (720 / (mBoard->GetBoardSize() + 1))));
 				boardLayer->addChild(dot, 2);
-				DrawNode *cirlce = DrawNode::create();
+				DrawNode* cirlce = DrawNode::create();
 				// 中心座標、半径、角度、頂点数、中心に向かう線を描画するか、倍率x、倍率y
 				cirlce->drawCircle(Vec2::ZERO, (720 / (mBoard->GetBoardSize() + 1)) / 2 * 0.8, 45, 360, false, 1, 1, Color4F::BLACK);
 				cirlce->setPosition(dot->getPosition());
@@ -391,29 +392,29 @@ void Game::updateDraw() {
 				//DrawCircle((i + 0.5)*(720 / (board.GetBoardSize() + 1)), (j + 0.5)*(720 / (board.GetBoardSize() + 1)), (720 / (board.GetBoardSize() + 1)) / 2 * 0.8, GetColor(0, 0, 0), FALSE);
 
 				//DrawBox(i*(720 / (board.GetBoardSize() + 1)), j*(720 / (board.GetBoardSize() + 1)), (i + 1)*(720 / (board.GetBoardSize() + 1)), (j + 1)*(720 / (board.GetBoardSize() + 1)), GetColor(0, 0, 0), TRUE);
-			
+
 				Sprite* square = Sprite::create();
 				square->setColor(Color3B::BLACK);
 				square->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 				square->setTextureRect(rect);
-				square->setPosition(origin.x + i*(720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j*(720 / (mBoard->GetBoardSize() + 1)) + 1));
+				square->setPosition(origin.x + i * (720 / (mBoard->GetBoardSize() + 1)) + 1, origin.y + visibleSize.height - (j * (720 / (mBoard->GetBoardSize() + 1)) + 1));
 				boardLayer->addChild(square, 2);
 			}
 		}
 
 
 	}
-	
+
 	auto state = (Label*)this->getChildByName("stateLabel");
 	if (!mBoard->isFinish()) {
 		if (mBoard->GetTurn() == black) {
-			state->setString("黒の番です");
+			Util::changeLabelText(state, "黒の番です");
 		}
 		else if (mBoard->GetTurn() == white) {
-			state->setString("白の番です");
+			Util::changeLabelText(state, "白の番です");
 		}
 		else if (mBoard->GetTurn() == gray) {
-			state->setString("カスタムモード");
+			Util::changeLabelText(state, "カスタムモード");
 		}
 	}
 
@@ -422,12 +423,12 @@ void Game::updateDraw() {
 	swhite << "白　" << mBoard->CountStone(BorW::white) << "個";
 	auto blabel = (Label*)this->getChildByName("blackLabel");
 	auto wlabel = (Label*)this->getChildByName("whiteLabel");
-	blabel->setString(sblack.str());
-	wlabel->setString(swhite.str());
+	Util::changeLabelText(blabel, sblack.str());
+	Util::changeLabelText(wlabel, swhite.str());
 
 	std::string text;
 	if (mBoard->GetTurn() != gray) text = "ポーズ"; else text = "開始";
-	((Label*)getChildByName("ButtonLabel3"))->setString(text);
+	Util::changeLabelText(((Label*)getChildByName("ButtonLabel3")), text);
 
 }
 
@@ -533,7 +534,7 @@ void Game::updateGame() {
 		mTimer++;
 		if (mTimer > COMWAIT) {
 #ifdef DEBUG
-		cocos2d::log("b:%d,w:%d\n", mBoard->CountStone(black), mBoard->CountStone(white));
+			cocos2d::log("b:%d,w:%d\n", mBoard->CountStone(black), mBoard->CountStone(white));
 #endif // DEBUG
 
 			if (mComtype == com1) {
@@ -613,7 +614,7 @@ void Game::GetResultMessage() {
 	}
 
 	auto state = (Label*)this->getChildByName("stateLabel");
-	state->setString(str);
+	Util::changeLabelText(state, str);
 
 	auto _userDef = UserDefault::getInstance();
 	_userDef->setIntegerForKey("playcount", _userDef->getIntegerForKey("playcount") + 1);
@@ -647,36 +648,36 @@ void Game::updateGameTouch() {
 			}
 		}
 		else if (mBoard->put(mHand->GetPointX(), mHand->GetPointY()) == true) {
-				//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
-				AudioEngine::play2d(pachin, false);
+			//PlaySoundMem(putsound, DX_PLAYTYPE_BACK);
+			AudioEngine::play2d(pachin, false);
 
+			if (mBoard->TurnChange() == false) {
 				if (mBoard->TurnChange() == false) {
-					if (mBoard->TurnChange() == false) {
-						GetResultMessage();
-						mMessageFlag = true;
-						mHand->SetInputFlag(false);
-						mBoard->finish();
-						//break;
-
-					}
-					else {
-						mHand->SetInputFlag(false);
-						mMessageFlag = true;
-					}
-				}
-
-				if (mBoard->GetTurn() == mComFlag) {
+					GetResultMessage();
+					mMessageFlag = true;
 					mHand->SetInputFlag(false);
-				}
+					mBoard->finish();
+					//break;
 
-				if (mComtype == com1moroi || mComtype == com2moroi) {
-					mHand->SetInputFlag(false);
-					mFallFlag = true;
 				}
+				else {
+					mHand->SetInputFlag(false);
+					mMessageFlag = true;
+				}
+			}
+
+			if (mBoard->GetTurn() == mComFlag) {
+				mHand->SetInputFlag(false);
+			}
+
+			if (mComtype == com1moroi || mComtype == com2moroi) {
+				mHand->SetInputFlag(false);
+				mFallFlag = true;
+			}
 		}
 
 	}
-	
+
 	// inputFlagに関係ないクリック処理
 	if (mHand->CheckMouseDownNoCheckFlag() == true) {
 		if (990 < mInputX && mInputX < 1202 && 590 < mInputY && mInputY < 674) {
@@ -814,7 +815,7 @@ void Game::Pause() {
 		if (targetBox.containsPoint(touchPoint))
 		{
 			AudioEngine::play2d(pochi, false);
-			mHand->SetInputFlag(true);	
+			mHand->SetInputFlag(true);
 			if (mComFlag == black) {
 				mHand->SetInputFlag(false);
 			}
